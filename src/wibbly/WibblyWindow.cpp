@@ -42,7 +42,7 @@ SOFTWARE.
 #include "ScrollArea.h"
 #include "WibblyWindow.h"
 #include "WobblyException.h"
-
+#include "version.h"
 
 std::mutex requests_mutex;
 std::condition_variable requests_condition;
@@ -68,6 +68,7 @@ WibblyWindow::WibblyWindow()
     , settings(QApplication::applicationDirPath() + "/wibbly.ini", QSettings::IniFormat)
 #endif
 {
+    loadFonts();
     createUI();
 
     try {
@@ -281,6 +282,7 @@ void WibblyWindow::createUI() {
     setAcceptDrops(true);
 
     setWindowTitle(QStringLiteral("Wibbly Metrics Collector v%1").arg(PACKAGE_VERSION));
+    setWindowIcon(QIcon(":/icons/qvs.ico"));
 
     createMainWindow();
     createVideoOutputWindow();
@@ -294,11 +296,10 @@ void WibblyWindow::createUI() {
 
 
 void WibblyWindow::createMenus() {
-    QMenuBar *bar = menuBar();
 
-    menu_menu = bar->addMenu("&Menu");
+    menu_menu = menuBar()->addMenu("&Menu");
 
-    QAction *quit_action = new QAction("&Quit", this);
+    QAction *quit_action = new QAction(QIcon(":/buttons/door_in.png"), "&Quit", this);
     quit_action->setShortcut(QKeySequence("Ctrl+Q"));
 
     connect(quit_action, &QAction::triggered, this, &WibblyWindow::close);
@@ -307,14 +308,15 @@ void WibblyWindow::createMenus() {
     menu_menu->addAction(quit_action);
 
 
-    QMenu *h = bar->addMenu("&Help");
+    QMenu *h = menuBar()->addMenu("&Help");
 
-    QAction *helpAbout = new QAction("About", this);
-    QAction *helpAboutQt = new QAction("About Qt", this);
+    QAction *helpAbout = new QAction(QIcon(":/buttons/information.png"), "About", this);
+    QAction *helpAboutQt = new QAction(QIcon(":/buttons/qt.png"), "About Qt", this);
 
     connect(helpAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, QStringLiteral("About Wibbly"), QStringLiteral(
-            "<a href='https://github.com/dubhater/Wobbly'>https://github.com/dubhater/Wobbly</a><br />"
+            "This Project <a href='https://github.com/emako/Wobbly'>https://github.com/emako/Wobbly</a><br />"
+            "is forked from <a href='https://github.com/dubhater/Wobbly'>https://github.com/dubhater/Wobbly</a><br />"
             "<br />"
             "Copyright (c) 2015, John Smith<br />"
             "<br />"
@@ -385,8 +387,8 @@ void WibblyWindow::createMainWindow() {
 
     main_destination_edit = new QLineEdit;
 
-    QPushButton *main_choose_button = new QPushButton("Choose");
-    QPushButton *main_autonumber_button = new QPushButton("Autonumber");
+    QPushButton *main_choose_button = new QPushButton(QIcon(":/buttons/folder_magnify.png"), "Choose");
+    QPushButton *main_autonumber_button = new QPushButton(QIcon(":/buttons/sort_number.png"), "Autonumber");
 
     QPushButton *main_add_jobs_button = new QPushButton("Add jobs");
     QPushButton *main_remove_jobs_button = new QPushButton("Remove jobs");
@@ -414,10 +416,11 @@ void WibblyWindow::createMainWindow() {
     main_progress_dialog = new QProgressDialog;
     main_progress_dialog->setModal(true);
     main_progress_dialog->setWindowTitle(QStringLiteral("Gathering metrics..."));
+    main_progress_dialog->setWindowIcon(windowIcon());
     main_progress_dialog->setLabel(new QLabel);
     main_progress_dialog->reset();
 
-    QPushButton *main_engage_button = new QPushButton("Engage");
+    QPushButton *main_engage_button = new QPushButton(QIcon(":/buttons/wand.png"), "Engage");
 
 
     connect(main_jobs_list, &ListWidget::currentRowChanged, [this, main_steps_buttons, steps] (int currentRow) {
@@ -487,7 +490,7 @@ void WibblyWindow::createMainWindow() {
     connect(main_destination_edit, &QLineEdit::editingFinished, destinationChanged);
 
     connect(main_choose_button, &QPushButton::clicked, [this, destinationChanged] () {
-        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Choose destination"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Choose destination"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr);
 
         if (!path.isEmpty()) {
             settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -514,7 +517,7 @@ void WibblyWindow::createMainWindow() {
     });
 
     connect(main_add_jobs_button, &QPushButton::clicked, [this] () {
-        QStringList paths = QFileDialog::getOpenFileNames(this, QStringLiteral("Open video file"), settings.value("user_interface/last_dir").toString(), QString(), nullptr, QFileDialog::DontUseNativeDialog);
+        QStringList paths = QFileDialog::getOpenFileNames(this, QStringLiteral("Open video file"), settings.value("user_interface/last_dir").toString(), QString(), nullptr);
 
         paths.sort();
 
@@ -779,6 +782,7 @@ void WibblyWindow::createVideoOutputWindow() {
     video_dock->setVisible(true);
     video_dock->setFloating(true);
     video_dock->setWidget(video_widget);
+    video_dock->toggleViewAction()->setIcon(QIcon(":/buttons/film_go.png"));
     addDockWidget(Qt::RightDockWidgetArea, video_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], video_dock->toggleViewAction());
@@ -844,6 +848,7 @@ void WibblyWindow::createCropWindow() {
     crop_dock->setVisible(false);
     crop_dock->setFloating(true);
     crop_dock->setWidget(crop_widget);
+    crop_dock->toggleViewAction()->setIcon(QIcon(":/buttons/transform_crop.png"));
     addDockWidget(Qt::RightDockWidgetArea, crop_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], crop_dock->toggleViewAction());
@@ -944,6 +949,7 @@ void WibblyWindow::createVFMWindow() {
     vfm_dock->setVisible(false);
     vfm_dock->setFloating(true);
     vfm_dock->setWidget(vfm_widget);
+    vfm_dock->toggleViewAction()->setIcon(QIcon(":/buttons/slideshow_full_screen.png"));
     addDockWidget(Qt::RightDockWidgetArea, vfm_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], vfm_dock->toggleViewAction());
@@ -1042,6 +1048,7 @@ void WibblyWindow::createTrimWindow() {
     trim_dock->setVisible(false);
     trim_dock->setFloating(true);
     trim_dock->setWidget(trim_widget);
+    trim_dock->toggleViewAction()->setIcon(QIcon(":/buttons/clip_splitter.png"));
     addDockWidget(Qt::RightDockWidgetArea, trim_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], trim_dock->toggleViewAction());
@@ -1086,10 +1093,26 @@ void WibblyWindow::createInterlacedFadesWindow() {
     fades_dock->setVisible(false);
     fades_dock->setFloating(true);
     fades_dock->setWidget(fades_widget);
+    fades_dock->toggleViewAction()->setIcon(QIcon(":/buttons/select_by_intersection.png"));
     addDockWidget(Qt::RightDockWidgetArea, fades_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], fades_dock->toggleViewAction());
     connect(fades_dock, &DockWidget::visibilityChanged, fades_dock, &DockWidget::setEnabled);
+}
+
+
+void WibblyWindow::loadFonts()
+{
+#if false
+    auto getResource = [] (const QString &a_filename) -> QByteArray
+    {
+        QResource resource(a_filename);
+        return QByteArray(reinterpret_cast<const char *>(resource.data()), static_cast<int>(resource.size()));
+    };
+
+    QFontDatabase::addApplicationFontFromData(getResource(":/fonts/consola.ttf"));
+#endif
+    QApplication::setFont(FONT_DEFAULT);
 }
 
 
@@ -1153,6 +1176,7 @@ void WibblyWindow::createSettingsWindow() {
     settings_dock->setVisible(false);
     settings_dock->setFloating(true);
     settings_dock->setWidget(settings_widget);
+    settings_dock->toggleViewAction()->setIcon(QIcon(":/buttons/cog.png"));
     addDockWidget(Qt::RightDockWidgetArea, settings_dock);
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], settings_dock->toggleViewAction());

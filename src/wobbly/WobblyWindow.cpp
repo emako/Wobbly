@@ -46,6 +46,7 @@ SOFTWARE.
 #include "ScrollArea.h"
 #include "WobblyException.h"
 #include "WobblyWindow.h"
+#include "version.h"
 
 
 WobblyWindow::WobblyWindow()
@@ -266,34 +267,51 @@ void WobblyWindow::createMenu() {
 
     struct Menu {
         const char *name;
+        const char *icon;
         void (WobblyWindow::* func)();
     };
 
     std::vector<Menu> project_menu = {
-        { "&Open project",              &WobblyWindow::openProject },
-        { "Open video",                 &WobblyWindow::openVideo },
-        { "&Save project",              &WobblyWindow::saveProject },
-        { "Save project &as",           &WobblyWindow::saveProjectAs },
-        { "Save script",                &WobblyWindow::saveScript },
-        { "Save script as",             &WobblyWindow::saveScriptAs },
-        { "Save timecodes",             &WobblyWindow::saveTimecodes },
-        { "Save timecodes as",          &WobblyWindow::saveTimecodesAs },
-        { "Save screenshot",            &WobblyWindow::saveScreenshot },
-        { "Import from project",        &WobblyWindow::importFromProject },
-        { nullptr,                      nullptr },
-        { "&Recently opened",           nullptr },
-        { nullptr,                      nullptr },
-        { "&Quit",                      &WobblyWindow::quit }
+        { "&Open project",             ":/buttons/folder_magnify.png",     &WobblyWindow::openProject },
+        { "Open video",                ":/buttons/film.png",               &WobblyWindow::openVideo },
+        { nullptr,                     nullptr,                            nullptr },
+        { "&Save project",             ":/buttons/disk.png",               &WobblyWindow::saveProject },
+        { "Save project &as",          ":/buttons/disk.png",               &WobblyWindow::saveProjectAs },
+        { nullptr,                     nullptr,                            nullptr },
+        { "Save script",               ":/buttons/script_save.png",        &WobblyWindow::saveScript },
+        { "Save script as",            ":/buttons/script_save.png",        &WobblyWindow::saveScriptAs },
+        { nullptr,                     nullptr,                            nullptr },
+        { "Save timecodes",            ":/buttons/page_save.png",          &WobblyWindow::saveTimecodes },
+        { "Save timecodes as",         ":/buttons/page_save.png",          &WobblyWindow::saveTimecodesAs },
+        { nullptr,                     nullptr,                            nullptr },
+        { "Save screenshot",           ":/buttons/picture_save.png",       &WobblyWindow::saveScreenshot },
+        { "Import from project",       ":/buttons/import_wiz.png",         &WobblyWindow::importFromProject },
+        { nullptr,                     nullptr,                            nullptr },
+        { "&Recently opened",          ":/buttons/folder.png",             nullptr },
+        { nullptr,                     nullptr,                            nullptr },
+        { "&Quit",                     ":/buttons/door_in.png",            &WobblyWindow::quit }
     };
 
     for (size_t i = 0; i < project_menu.size(); i++) {
         if (project_menu[i].name && project_menu[i].func) {
-            QAction *action = new QAction(project_menu[i].name, this);
+            QAction *action = nullptr;
+
+            if(project_menu[i].icon) {
+                action = new QAction(QIcon(project_menu[i].icon), project_menu[i].name, this);
+            }
+            else {
+                action = new QAction(project_menu[i].name, this);
+            }
             connect(action, &QAction::triggered, this, project_menu[i].func);
             p->addAction(action);
         } else if (project_menu[i].name && !project_menu[i].func) {
             // Not very nicely done.
-            recent_menu = p->addMenu(project_menu[i].name);
+            if(project_menu[i].icon) {
+                recent_menu = p->addMenu(QIcon(project_menu[i].icon), project_menu[i].name);
+            }
+            else {
+                recent_menu = p->addMenu(project_menu[i].name);
+            }
         } else {
             p->addSeparator();
         }
@@ -317,12 +335,13 @@ void WobblyWindow::createMenu() {
 
     QMenu *h = bar->addMenu("&Help");
 
-    QAction *helpAbout = new QAction("About", this);
-    QAction *helpAboutQt = new QAction("About Qt", this);
+    QAction *helpAbout = new QAction(QIcon(":/buttons/information.png"), "About", this);
+    QAction *helpAboutQt = new QAction(QIcon(":/buttons/qt.png"), "About Qt", this);
 
     connect(helpAbout, &QAction::triggered, [this] () {
         QMessageBox::about(this, QStringLiteral("About Wobbly"), QStringLiteral(
-            "<a href='https://github.com/dubhater/Wobbly'>https://github.com/dubhater/Wobbly</a><br />"
+            "This Project <a href='https://github.com/emako/Wobbly'>https://github.com/emako/Wobbly</a><br />"
+            "is forked from <a href='https://github.com/dubhater/Wobbly'>https://github.com/dubhater/Wobbly</a><br />"
             "<br />"
             "Copyright (c) 2015, John Smith<br />"
             "<br />"
@@ -475,6 +494,7 @@ void WobblyWindow::createFrameDetailsViewer() {
     details_dock->setVisible(false);
     details_dock->setFloating(true);
     details_dock->setWidget(details_widget);
+    details_dock->toggleViewAction()->setIcon(QIcon(":/buttons/scroll_pane_detail.png"));
     addDockWidget(Qt::LeftDockWidgetArea, details_dock);
     tools_menu->addAction(details_dock->toggleViewAction());
     connect(details_dock, &QDockWidget::visibilityChanged, details_dock, &QDockWidget::setEnabled);
@@ -706,6 +726,7 @@ void WobblyWindow::createCropAssistant() {
     crop_dock->setVisible(false);
     crop_dock->setFloating(true);
     crop_dock->setWidget(crop_widget);
+    crop_dock->toggleViewAction()->setIcon(QIcon(":/buttons/transform_crop.png"));
     addDockWidget(Qt::RightDockWidgetArea, crop_dock);
     tools_menu->addAction(crop_dock->toggleViewAction());
     connect(crop_dock, &DockWidget::visibilityChanged, crop_dock, &DockWidget::setEnabled);
@@ -736,9 +757,9 @@ void WobblyWindow::createPresetEditor() {
                 "The VapourSynth core object is called 'c'."
     ));
 
-    QPushButton *new_button = new QPushButton(QStringLiteral("New"));
-    QPushButton *rename_button = new QPushButton(QStringLiteral("Rename"));
-    QPushButton *delete_button = new QPushButton(QStringLiteral("Delete"));
+    QPushButton *new_button = new QPushButton(QIcon(":/buttons/add.png"), QStringLiteral("New"));
+    QPushButton *rename_button = new QPushButton(QIcon(":/buttons/textfield_rename.png"), QStringLiteral("Rename"));
+    QPushButton *delete_button = new QPushButton(QIcon(":/buttons/delete.png"), QStringLiteral("Delete"));
 
     connect(preset_combo, static_cast<void (QComboBox::*)(const QString &)>(&QComboBox::activated), this, &WobblyWindow::presetChanged);
 
@@ -882,6 +903,7 @@ void WobblyWindow::createPresetEditor() {
     preset_dock->setVisible(false);
     preset_dock->setFloating(true);
     preset_dock->setWidget(preset_widget);
+    preset_dock->toggleViewAction()->setIcon(QIcon(":/buttons/dns_setting.png"));
     addDockWidget(Qt::RightDockWidgetArea, preset_dock);
     tools_menu->addAction(preset_dock->toggleViewAction());
     connect(preset_dock, &DockWidget::visibilityChanged, preset_dock, &DockWidget::setEnabled);
@@ -950,6 +972,7 @@ void WobblyWindow::createPatternEditor() {
     pattern_dock->setVisible(false);
     pattern_dock->setFloating(true);
     pattern_dock->setWidget(pattern_widget);
+    pattern_dock->toggleViewAction()->setIcon(QIcon(":/buttons/receipt_stamp.png"));
     addDockWidget(Qt::RightDockWidgetArea, pattern_dock);
     tools_menu->addAction(pattern_dock->toggleViewAction());
     connect(pattern_dock, &DockWidget::visibilityChanged, pattern_dock, &DockWidget::setEnabled);
@@ -1246,6 +1269,7 @@ void WobblyWindow::createSectionsEditor() {
     sections_dock->setVisible(false);
     sections_dock->setFloating(true);
     sections_dock->setWidget(sections_widget);
+    sections_dock->toggleViewAction()->setIcon(QIcon(":/buttons/name_manager.png"));
     addDockWidget(Qt::RightDockWidgetArea, sections_dock);
     tools_menu->addAction(sections_dock->toggleViewAction());
     connect(sections_dock, &DockWidget::visibilityChanged, sections_dock, &DockWidget::setEnabled);
@@ -1628,6 +1652,7 @@ void WobblyWindow::createCustomListsEditor() {
     cl_dock->setVisible(false);
     cl_dock->setFloating(true);
     cl_dock->setWidget(cl_widget);
+    cl_dock->toggleViewAction()->setIcon(QIcon(":/buttons/digit_separator.png"));
     addDockWidget(Qt::RightDockWidgetArea, cl_dock);
     tools_menu->addAction(cl_dock->toggleViewAction());
     connect(cl_dock, &DockWidget::visibilityChanged, cl_dock, &DockWidget::setEnabled);
@@ -1695,6 +1720,7 @@ void WobblyWindow::createFrameRatesViewer() {
     frame_rates_dock->setVisible(false);
     frame_rates_dock->setFloating(true);
     frame_rates_dock->setWidget(frame_rates_widget);
+    frame_rates_dock->toggleViewAction()->setIcon(QIcon(":/buttons/edit_video_chain.png"));
     addDockWidget(Qt::RightDockWidgetArea, frame_rates_dock);
     tools_menu->addAction(frame_rates_dock->toggleViewAction());
     connect(frame_rates_dock, &DockWidget::visibilityChanged, frame_rates_dock, &DockWidget::setEnabled);
@@ -1766,6 +1792,7 @@ void WobblyWindow::createFrozenFramesViewer() {
     frozen_frames_dock->setVisible(false);
     frozen_frames_dock->setFloating(true);
     frozen_frames_dock->setWidget(frozen_frames_widget);
+    frozen_frames_dock->toggleViewAction()->setIcon(QIcon(":/buttons/picture_frame.png"));
     addDockWidget(Qt::RightDockWidgetArea, frozen_frames_dock);
     tools_menu->addAction(frozen_frames_dock->toggleViewAction());
     connect(frozen_frames_dock, &DockWidget::visibilityChanged, frozen_frames_dock, &DockWidget::setEnabled);
@@ -1975,6 +2002,7 @@ void WobblyWindow::createPatternGuessingWindow() {
     pg_dock->setVisible(false);
     pg_dock->setFloating(true);
     pg_dock->setWidget(pg_widget);
+    pg_dock->toggleViewAction()->setIcon(QIcon(":/buttons/stamp_pattern.png"));
     addDockWidget(Qt::RightDockWidgetArea, pg_dock);
     tools_menu->addAction(pg_dock->toggleViewAction());
     connect(pg_dock, &DockWidget::visibilityChanged, pg_dock, &DockWidget::setEnabled);
@@ -2027,6 +2055,7 @@ void WobblyWindow::createMicSearchWindow() {
     mic_search_dock->setVisible(false);
     mic_search_dock->setFloating(true);
     mic_search_dock->setWidget(mic_search_widget);
+    mic_search_dock->toggleViewAction()->setIcon(QIcon(":/buttons/search_field.png"));
     addDockWidget(Qt::RightDockWidgetArea, mic_search_dock);
     tools_menu->addAction(mic_search_dock->toggleViewAction());
     connect(mic_search_dock, &DockWidget::visibilityChanged, mic_search_dock, &DockWidget::setEnabled);
@@ -2080,6 +2109,7 @@ void WobblyWindow::createCMatchSequencesWindow() {
     c_match_sequences_dock->setVisible(false);
     c_match_sequences_dock->setFloating(true);
     c_match_sequences_dock->setWidget(c_match_sequences_widget);
+    c_match_sequences_dock->toggleViewAction()->setIcon(QIcon(":/buttons/microformats.png"));
     addDockWidget(Qt::RightDockWidgetArea, c_match_sequences_dock);
     tools_menu->addAction(c_match_sequences_dock->toggleViewAction());
     connect(c_match_sequences_dock, &DockWidget::visibilityChanged, c_match_sequences_dock, &DockWidget::setEnabled);
@@ -2131,6 +2161,7 @@ void WobblyWindow::createFadesWindow() {
     fades_dock->setVisible(false);
     fades_dock->setFloating(true);
     fades_dock->setWidget(fades_widget);
+    fades_dock->toggleViewAction()->setIcon(QIcon(":/buttons/select_by_intersection.png"));
     addDockWidget(Qt::RightDockWidgetArea, fades_dock);
     tools_menu->addAction(fades_dock->toggleViewAction());
     connect(fades_dock, &DockWidget::visibilityChanged, fades_dock, &DockWidget::setEnabled);
@@ -2349,6 +2380,7 @@ void WobblyWindow::createSettingsWindow() {
     settings_dock->setVisible(false);
     settings_dock->setFloating(true);
     settings_dock->setWidget(settings_tabs);
+    settings_dock->toggleViewAction()->setIcon(QIcon(":/buttons/cog.png"));
     addDockWidget(Qt::RightDockWidgetArea, settings_dock);
     tools_menu->addAction(settings_dock->toggleViewAction());
     connect(settings_dock, &DockWidget::visibilityChanged, settings_dock, &DockWidget::setEnabled);
@@ -2429,12 +2461,15 @@ void WobblyWindow::drawColorBars() {
 
 
 void WobblyWindow::createUI() {
+    QApplication::setFont(FONT_DEFAULT);
+
     setAcceptDrops(true);
 
     createMenu();
     createShortcuts();
 
     setWindowTitle(window_title);
+    setWindowIcon(QIcon(":/icons/qvs.ico"));
 
     statusBar()->setSizeGripEnabled(true);
 
@@ -2455,7 +2490,7 @@ void WobblyWindow::createUI() {
     tab_bar->setFocusPolicy(Qt::NoFocus);
 
     frame_label = new FrameLabel;
-    frame_label->setAlignment(Qt::AlignCenter);
+    frame_label->setAlignment(Qt::AlignHCenter|Qt::AlignTop);
     frame_label->setPixmap(QPixmap::fromImage(splash_image));
 
     for (int i = 0; i < MAX_THUMBNAILS; i++) {
@@ -2534,6 +2569,7 @@ void WobblyWindow::createUI() {
     createMicSearchWindow();
     createCMatchSequencesWindow();
     createFadesWindow();
+    tools_menu->addSeparator();
     createSettingsWindow();
 
 
@@ -3190,7 +3226,7 @@ void WobblyWindow::openProject() {
     if (askToSaveIfModified() == QMessageBox::Cancel)
         return;
 
-    QString path = QFileDialog::getOpenFileName(this, QStringLiteral("Open Wobbly project"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+    QString path = QFileDialog::getOpenFileName(this, QStringLiteral("Open Wobbly project"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr);
 
     if (!path.isNull()) {
         settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -3271,7 +3307,7 @@ void WobblyWindow::openVideo() {
     if (askToSaveIfModified() == QMessageBox::Cancel)
         return;
 
-    QString path = QFileDialog::getOpenFileName(this, QStringLiteral("Open video file"), settings.value("user_interface/last_dir").toString(), QString(), nullptr, QFileDialog::DontUseNativeDialog);
+    QString path = QFileDialog::getOpenFileName(this, QStringLiteral("Open video file"), settings.value("user_interface/last_dir").toString(), QString(), nullptr);
 
     if (!path.isNull()) {
         settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -3326,7 +3362,7 @@ void WobblyWindow::saveProjectAs() {
         if (!project)
             throw WobblyException("Can't save the project because none has been loaded.");
 
-        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save Wobbly project"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save Wobbly project"), settings.value("user_interface/last_dir").toString(), QStringLiteral("Wobbly projects (*.json);;All files (*)"), nullptr);
 
         if (!path.isNull()) {
             settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -3385,7 +3421,7 @@ void WobblyWindow::saveScriptAs() {
             dir = project_path;
         dir += ".py";
 
-        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save script"), dir, QStringLiteral("VapourSynth scripts (*.py *.vpy);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save script"), dir, QStringLiteral("VapourSynth scripts (*.py *.vpy);;All files (*)"), nullptr);
 
         if (!path.isNull()) {
             settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -3441,7 +3477,7 @@ void WobblyWindow::saveTimecodesAs() {
             dir = project_path;
         dir += ".vfr.txt";
 
-        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save timecodes"), dir, QStringLiteral("Timecodes v1 files (*.txt);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+        QString path = QFileDialog::getSaveFileName(this, QStringLiteral("Save timecodes"), dir, QStringLiteral("Timecodes v1 files (*.txt);;All files (*)"), nullptr);
 
         if (!path.isNull()) {
             settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());
@@ -3464,7 +3500,7 @@ void WobblyWindow::saveScreenshot() {
         path = project_path;
     path += ".png";
 
-    path = QFileDialog::getSaveFileName(this, QStringLiteral("Save screenshot"), path, QStringLiteral("PNG images (*.png);;All files (*)"), nullptr, QFileDialog::DontUseNativeDialog);
+    path = QFileDialog::getSaveFileName(this, QStringLiteral("Save screenshot"), path, QStringLiteral("PNG images (*.png);;All files (*)"), nullptr);
 
     if (!path.isNull()) {
         settings.setValue("user_interface/last_dir", QFileInfo(path).absolutePath());

@@ -35,6 +35,10 @@ SOFTWARE.
 #include <QSlider>
 #include <QSpinBox>
 #include <QTimeEdit>
+#include <QFontDatabase>
+#include <QResource>
+#include <QApplication>
+#include <QDebug>
 
 #include <VSScript.h>
 
@@ -151,6 +155,8 @@ class WibblyWindow : public QMainWindow
     void createTrimWindow();
     void createInterlacedFadesWindow();
     void createSettingsWindow();
+
+    void loadFonts();
 
     void realOpenVideo(const QString &path);
 
