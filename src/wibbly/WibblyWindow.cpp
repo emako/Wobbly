@@ -68,7 +68,6 @@ WibblyWindow::WibblyWindow()
     , settings(QApplication::applicationDirPath() + "/wibbly.ini", QSettings::IniFormat)
 #endif
 {
-    loadFonts();
     createUI();
 
     try {
@@ -283,6 +282,7 @@ void WibblyWindow::createUI() {
 
     setWindowTitle(QStringLiteral("Wibbly Metrics Collector v%1").arg(PACKAGE_VERSION));
     setWindowIcon(QIcon(":/icons/qvs.ico"));
+    menuBar()->setFont(FONT_DEFAULT);
 
     createMainWindow();
     createVideoOutputWindow();
@@ -304,6 +304,7 @@ void WibblyWindow::createMenus() {
 
     connect(quit_action, &QAction::triggered, this, &WibblyWindow::close);
 
+    menu_menu->setFont(menuBar()->font());
     menu_menu->addSeparator();
     menu_menu->addAction(quit_action);
 
@@ -339,6 +340,7 @@ void WibblyWindow::createMenus() {
         QMessageBox::aboutQt(this);
     });
 
+    h->setFont(menuBar()->font());
     h->addAction(helpAbout);
     h->addAction(helpAboutQt);
 }
@@ -1098,21 +1100,6 @@ void WibblyWindow::createInterlacedFadesWindow() {
     QList<QAction *> actions = menu_menu->actions();
     menu_menu->insertAction(actions[actions.size() - 2], fades_dock->toggleViewAction());
     connect(fades_dock, &DockWidget::visibilityChanged, fades_dock, &DockWidget::setEnabled);
-}
-
-
-void WibblyWindow::loadFonts()
-{
-#if false
-    auto getResource = [] (const QString &a_filename) -> QByteArray
-    {
-        QResource resource(a_filename);
-        return QByteArray(reinterpret_cast<const char *>(resource.data()), static_cast<int>(resource.size()));
-    };
-
-    QFontDatabase::addApplicationFontFromData(getResource(":/fonts/consola.ttf"));
-#endif
-    QApplication::setFont(FONT_DEFAULT);
 }
 
 

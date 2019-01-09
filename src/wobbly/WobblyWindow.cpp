@@ -108,7 +108,7 @@ void WobblyWindow::addRecentFile(const QString &path) {
         connect(recent, &QAction::triggered, recent_menu_signal_mapper, static_cast<void (QSignalMapper::*)()>(&QSignalMapper::map));
         recent_menu_signal_mapper->setMapping(recent, path);
 
-        recent_menu->insertAction(actions.size() ? actions[0] : 0, recent);
+        recent_menu->insertAction(actions.size() ? actions[0] : nullptr, recent);
 
         if (actions.size() == 10)
             recent_menu->removeAction(actions[9]);
@@ -119,7 +119,7 @@ void WobblyWindow::addRecentFile(const QString &path) {
         QString text = actions[i]->text();
         text[1] = QChar('0' + i);
         actions[i]->setText(text);
-
+        actions[i]->setFont(menuBar()->font());
         settings.setValue(QStringLiteral("user_interface/recent%1").arg(i), text.mid(4));
     }
 }
@@ -262,8 +262,9 @@ void WobblyWindow::keyPressEvent(QKeyEvent *event) {
 
 void WobblyWindow::createMenu() {
     QMenuBar *bar = menuBar();
-
     QMenu *p = bar->addMenu("&Project");
+
+    bar->setFont(QFont(FONT_DEFAULT));
 
     struct Menu {
         const char *name;
@@ -303,15 +304,28 @@ void WobblyWindow::createMenu() {
                 action = new QAction(project_menu[i].name, this);
             }
             connect(action, &QAction::triggered, this, project_menu[i].func);
+            action->setFont(bar->font());
             p->addAction(action);
         } else if (project_menu[i].name && !project_menu[i].func) {
             // Not very nicely done.
+#if false
             if(project_menu[i].icon) {
                 recent_menu = p->addMenu(QIcon(project_menu[i].icon), project_menu[i].name);
             }
             else {
                 recent_menu = p->addMenu(project_menu[i].name);
             }
+            recent_menu->setFont(bar->font());
+#else
+            QMenu *menu = new QMenu(project_menu[i].name);
+
+            if(project_menu[i].icon) {
+                menu->setIcon(QIcon(project_menu[i].icon));
+            }
+            p->setFont(bar->font());
+            p->addMenu(menu);
+            recent_menu = menu;
+#endif
         } else {
             p->addSeparator();
         }
@@ -331,7 +345,7 @@ void WobblyWindow::createMenu() {
 
 
     tools_menu = bar->addMenu("&Tools");
-
+    tools_menu->setFont(menuBar()->font());
 
     QMenu *h = bar->addMenu("&Help");
 
@@ -364,6 +378,7 @@ void WobblyWindow::createMenu() {
         QMessageBox::aboutQt(this);
     });
 
+    h->setFont(menuBar()->font());
     h->addAction(helpAbout);
     h->addAction(helpAboutQt);
 }
@@ -2461,8 +2476,6 @@ void WobblyWindow::drawColorBars() {
 
 
 void WobblyWindow::createUI() {
-    QApplication::setFont(FONT_DEFAULT);
-
     setAcceptDrops(true);
 
     createMenu();
@@ -2910,6 +2923,9 @@ void WobblyWindow::updateCustomListsEditor() {
 
         QAction *copy_action = cl_copy_range_menu->addAction(cl_name);
         QAction *send_action = cl_send_range_menu->addAction(cl_name);
+
+        copy_action->setFont(menuBar()->font());
+        send_action->setFont(menuBar()->font());
         copy_action->setData((int)i);
         send_action->setData((int)i);
     }

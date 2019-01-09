@@ -156,8 +156,6 @@ class WibblyWindow : public QMainWindow
     void createInterlacedFadesWindow();
     void createSettingsWindow();
 
-    void loadFonts();
-
     void realOpenVideo(const QString &path);
 
     void evaluateFinalScript(int job_index);
